@@ -34,3 +34,9 @@
 #define dfACTION_IDLE			99
 
 #define GAME_FRAME_PER_SEC		50
+
+//---------------------------------------------------------------
+// 세션 버퍼 / 동시 접속
+//---------------------------------------------------------------
+#define SEND_BUFFER_SIZE		10000
+#define MAX_SESSION				(FD_SETSIZE - 1)	// select 한 번에 listen 소켓 1칸을 뺀 만큼

@@ -149,9 +149,10 @@ void Server::Network()
 			FD_SET(session->GetSocket(), &writeSet);
 	}
 
+	// 0 으로 두면 이벤트가 없어도 즉시 리턴해 루프가 CPU 를 다 쓴다
 	timeval timeout;
 	timeout.tv_sec = 0;
-	timeout.tv_usec = 0;
+	timeout.tv_usec = 1000;
 
 	int eventCount = select(0, &readSet, &writeSet, NULL, &timeout);
 
@@ -208,6 +209,14 @@ void Server::Accept()
 
 	char clientIP[INET_ADDRSTRLEN];
 	InetNtopA(AF_INET, &clientAddr.sin_addr, clientIP, INET_ADDRSTRLEN);
+
+	// fd_set 이 꽉 차면 FD_SET 이 조용히 무시해 그 세션은 영영 recv 되지 않는다
+	if (m_sessions.size() >= MAX_SESSION)
+	{
+		printf("Session Full # IP:%s\n", clientIP);
+		closesocket(clientSocket);
+		return;
+	}
 
 	// 이동 영역 안의 랜덤 위치에 캐릭터 생성
 	static std::random_device rd;

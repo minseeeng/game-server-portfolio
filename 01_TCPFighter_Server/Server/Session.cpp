@@ -8,7 +8,7 @@
 #include "MakePacket.h"
 
 Session::Session(SOCKET sock, DWORD sessionID, short x, short y, Server* server)
-	: m_socket(sock), m_sessionID(sessionID), m_server(server), m_isAlive(true),
+	: m_socket(sock), m_sessionID(sessionID), m_server(server), m_sendQ(SEND_BUFFER_SIZE), m_isAlive(true),
 	m_action(dfACTION_IDLE), m_direction(dfPACKET_MOVE_DIR_RR), m_x(x), m_y(y), m_hp(100)
 {
 }
@@ -100,8 +100,19 @@ bool Session::Send()
 	return true;
 }
 
+//패킷이 잘린 채로 들어가면 이후 스트림 전체가 어긋나므로, 다 못 넣으면 끊는다
 void Session::SendPacket(char* packet, int size)
 {
+	if (m_isAlive == false)
+		return;
+
+	if (m_sendQ.GetFreeSize() < size)
+	{
+		printf("ID: %d, SendQ is full!\n", m_sessionID);
+		Disconnect();
+		return;
+	}
+
 	m_sendQ.Enqueue(packet, size);
 }
 
